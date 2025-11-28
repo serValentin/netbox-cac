@@ -1,0 +1,43 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for ipam
+- name: Create ipam role Backup
+  netbox.netbox.netbox_ipam_role:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Backup
+      slug: bup
+    state: present
+
+- name: Create ipam role  Management
+  netbox.netbox.netbox_ipam_role:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Management
+      slug: mgmt
+    state: present
+
+- name: Create ipam role Storage
+  netbox.netbox.netbox_ipam_role:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Storage
+      slug: DB
+    state: present
+
+- name: Create ipam role Application
+  netbox.netbox.netbox_ipam_role:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Application
+      slug: app
+    state: present
+

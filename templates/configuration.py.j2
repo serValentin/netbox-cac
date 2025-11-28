@@ -1,0 +1,46 @@
+# NetBox configuration file (managed by Ansible)
+
+ALLOWED_HOSTS = ['{{ ansible_host4 }}']
+
+SECRET_KEY = '{{ secret_key }}'
+
+DEBUG = False
+
+DATABASE = {
+    'NAME': 'netbox',
+    'USER': '{{ postgres_user }}',
+    'PASSWORD': '{{ postgres_password }}',
+    'HOST': '127.0.0.1',
+    'PORT': '',
+}
+
+REDIS = {
+    'tasks': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'PASSWORD': '',
+        'DATABASE': 0,
+        'SSL': False,
+    },
+    'caching': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'PASSWORD': '',
+        'DATABASE': 1,
+        'SSL': False,
+    }
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+TIME_ZONE = 'Europe/Stockholm'
+LANGUAGE_CODE = 'en-us'
+

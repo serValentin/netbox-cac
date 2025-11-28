@@ -1,0 +1,157 @@
+---
+# Create independent select custom fields for each scope and attach to prefixes and IPs.
+- name: Define choice sets for custom fields environment
+  netbox.netbox.netbox_custom_field_choice_set:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: "environment_choices"
+      extra_choices:
+        - ['production', 'Production']
+        - ['development', 'Development']
+        - ['testing', 'Testing']
+    state: present
+
+- name: Define choice sets for custom fields role
+  netbox.netbox.netbox_custom_field_choice_set:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: "role_choices"
+      extra_choices:
+        - ['web', 'Web']
+        - ['api', 'API']
+        - ['database', 'Database']
+        - ['cache', 'Cache']
+    state: present
+
+- name: Define choice sets for custom fields
+  netbox.netbox.netbox_custom_field_choice_set:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: "location_choices"
+      extra_choices:
+        - ['cloud', 'Cloud']
+        - ['onprem', 'Onprem']
+        - ['edge', 'Edge']
+    state: present
+
+- name: Define choice sets for custom fields
+  netbox.netbox.netbox_custom_field_choice_set:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: "platform_choices"
+      extra_choices:
+        - ['rhel', 'Rhel']
+        - ['ubuntu', 'Ubuntu']
+        - ['windows', 'Windows']
+    state: present
+
+- name: Define choice sets for custom fields
+  netbox.netbox.netbox_custom_field_choice_set:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: "workload_choices"
+      extra_choices:
+        - ['physical', 'Physical']
+        - ['virtual', 'Virtual']
+        - ['container', 'Container']
+    state: present
+
+- name: Create 'environment' custom field (select) for prefixes and IPs
+  netbox.netbox.netbox_custom_field:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: environment
+      label: Environment
+      type: select
+      required: false
+      default: ""
+      description: "Scope: environment"
+      choice_set: environment_choices
+      object_types:
+        - ipam.prefix
+        - ipam.ipaddress
+    state: present
+
+- name: Create 'role' custom field (select) for prefixes and IPs
+  netbox.netbox.netbox_custom_field:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: role
+      label: Role
+      type: select
+      required: false
+      default: ""
+      description: "Scope: role"
+      choice_set: role_choices
+      object_types:
+        - ipam.prefix
+        - ipam.ipaddress
+    state: present
+
+- name: Create 'location' custom field (select) for prefixes and IPs
+  netbox.netbox.netbox_custom_field:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: location
+      label: Location
+      type: select
+      required: false
+      default: ""
+      description: "Scope: location"
+      choice_set: location_choices
+      object_types:
+        - ipam.prefix
+        - ipam.ipaddress
+    state: present
+
+- name: Create 'platform' custom field (select) for prefixes and IPs
+  netbox.netbox.netbox_custom_field:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: platform
+      label: Platform
+      type: select
+      required: false
+      default: ""
+      description: "Scope: platform"
+      choice_set: platform_choices
+      object_types:
+        - ipam.prefix
+        - ipam.ipaddress
+    state: present
+
+- name: Create 'workload' custom field (select) for prefixes and IPs
+  netbox.netbox.netbox_custom_field:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: workload
+      label: Workload
+      type: select
+      required: false
+      default: ""
+      description: "Scope: workload"
+      choice_set: workload_choices
+      object_types:
+        - ipam.prefix
+        - ipam.ipaddress
+    state: present

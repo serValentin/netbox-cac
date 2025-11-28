@@ -1,0 +1,65 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for postgresql
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - postgres_db_name is defined
+      - postgres_user is defined
+      - postgres_password is defined
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - libpq-dev
+      - python3-psycopg2
+    state: present
+    update_cache: true
+
+- name: Start PostgreSQL
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create postgreSQL user
+  become_user: postgres
+  become: true
+  community.postgresql.postgresql_user:
+    login_db: postgres
+    name: "{{ postgres_user }}"
+    password: "{{ postgres_password }}"
+    expires: infinity
+    state: present
+    login_unix_socket: /var/run/postgresql
+
+- name: Create postgreSQL database
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ postgres_db_name }}"
+    owner: "{{ postgres_user }}"
+    state: present
+    login_unix_socket: /var/run/postgresql
+
+- name: Grant CREATE on schema public to {{ postgres_user }}
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    type: schema
+    objs: public
+    db: "{{ postgres_db_name }}"
+    roles: "{{ postgres_user }}"
+    privs: CREATE
+    state: present
+    login_unix_socket: /var/run/postgresql
+
+
+- name: Ensure {{ postgres_user }} has privileges on {{ postgres_db_name }}
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    type: database
+    login_db: "{{ postgres_db_name }}"
+    roles: "{{ postgres_user }}"
+    privs: ALL
+    state: present
+    login_unix_socket: /var/run/postgresql

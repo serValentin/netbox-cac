@@ -1,0 +1,79 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for organization
+- name: Create region Maladalen
+  netbox.netbox.netbox_region:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Maladalen
+    state: present
+
+- name: Create region Uppsala lan
+  netbox.netbox.netbox_region:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Uppsala lan
+      parent_region: Maladalen
+    state: present
+
+- name: Create region Enkoping
+  netbox.netbox.netbox_region:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Enkoping
+      parent_region: Uppsala lan
+    state: present
+
+- name: Create site Akerbaret
+  netbox.netbox.netbox_site:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Akerbaret
+      description: BRF Akerbaret
+      physical_address: "Skordevagen 1-3"
+      region: Enkoping
+    state: present
+
+- name: Create Akerbaret Locations Skordevagen 1
+  netbox.netbox.netbox_location:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Skordevagen 1
+      slug: Enk-SV-1
+      description: BRF Akerbaret Skordevagen 1
+      site: Akerbaret
+    state: present
+
+- name: Create Akerbaret Locations Skordevagen 2
+  netbox.netbox.netbox_location:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Skordevagen 2
+      slug: Enk-SV-2
+      description: BRF Akerbaret Skordevagen 2
+      site: Akerbaret
+    state: present
+
+- name: Create Akerbaret Locations Skordevagen 3
+  netbox.netbox.netbox_location:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_api_token }}"
+    validate_certs: false
+    data:
+      name: Skordevagen 3
+      slug: Enk-SV-3
+      description: BRF Akerbaret Skordevagen 3
+      site: Akerbaret
+    state: present    

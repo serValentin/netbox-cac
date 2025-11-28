@@ -1,0 +1,236 @@
+---
+- name: Configure base NetBox
+  hosts: netbox
+  become: yes
+  become_method: sudo
+
+  vars:
+    secret_key: "{{ lookup('password', '/tmp/netbox_secret_key length=50') }}"
+    netbox_server_name: "{{ ansible_host }}"
+    postgres_db_name: netbox
+    ssl_private_key_path: /etc/ssl/private/netbox.key
+    ssl_certificate_path: /etc/ssl/certs/netbox.crt
+
+  tasks:
+    - name: Ensure /tmp/.ansible is usable by everyone
+      become: true
+      ansible.builtin.file:
+        path: /tmp/.ansible
+        state: directory
+        mode: "1777"
+        owner: root
+        group: root
+
+    - name: Install package
+      ansible.builtin.apt:
+        name: 
+          - redis-server
+          - git
+          - python3
+          - python3-pip
+          - python3-venv
+          - python3-dev
+          - build-essential
+          - libxml2-dev
+          - libxslt1-dev
+          - libffi-dev
+          - libssl-dev
+          - zlib1g-dev
+          - nginx
+        state: present
+        update_cache: yes
+
+    - name: Create postgres database
+      ansible.builtin.import_role:
+        name: postgresql
+        
+    - name: Create netbox system user
+      ansible.builtin.user:
+        name: netbox
+        system: yes
+        create_home: no
+        shell: /usr/sbin/nologin
+
+    - name: Clone NetBox
+      ansible.builtin.git:
+        repo: https://github.com/netbox-community/netbox.git
+        dest: /opt/netbox
+        version: "v4.2.0"
+        force: yes
+
+    - name: Ensure Redis is running
+      ansible.builtin.service:
+        name: redis-server
+        state: started
+        enabled: yes
+
+    - name: Mark /opt/netbox as a safe git directory
+      command: git config --global --add safe.directory /opt/netbox
+      become: true
+
+    - name: Ensure ownership of /opt/netbox tree
+      ansible.builtin.file:
+        path: /opt/netbox
+        state: directory
+        owner: netbox
+        group: netbox
+        recurse: yes
+
+    - name: Create symbolic link to python
+      ansible.builtin.command:
+        cmd: ln -s /usr/bin/python3 /usr/bin/python
+      ignore_errors: true 
+
+    - name: Deploy NetBox configuration.py from template
+      ansible.builtin.template:
+        src: templates/configuration.py.j2
+        dest: /opt/netbox/netbox/netbox/configuration.py
+        owner: netbox
+        group: netbox
+        mode: '0640'
+
+    - name: Create private key if missing
+      community.crypto.openssl_privatekey:
+        path: "{{ ssl_private_key_path }}"
+        size: 4096
+        type: RSA
+        mode: "0600"
+
+    - name: Create self-signed certificate if missing
+      community.crypto.x509_certificate:
+        path: "{{ ssl_certificate_path }}"
+        privatekey_path: "{{ ssl_private_key_path }}"
+        provider: selfsigned
+        mode: "0644"
+
+    - name: Deploy upgrade script
+      ansible.builtin.command:
+        cmd: bash /opt/netbox/upgrade.sh
+
+    - name: Django checks
+      ansible.builtin.command:
+        cmd: /opt/netbox/venv/bin/python3 manage.py check
+        chdir: /opt/netbox/netbox
+
+    - name: Migrate
+      ansible.builtin.command:  
+        cmd: /opt/netbox/venv/bin/python3 manage.py migrate
+        chdir: /opt/netbox/netbox
+        
+    - name: Collectstatic
+      ansible.builtin.command:
+        cmd: /opt/netbox/venv/bin/python3 manage.py collectstatic --no-input
+        chdir: /opt/netbox/netbox
+
+    - name: Create NetBox superuser
+      become: yes
+      become_user: netbox
+      command: >
+        /opt/netbox/venv/bin/python
+        /opt/netbox/netbox/manage.py
+        createsuperuser
+        --username admin
+        --email admin@example.com
+        --noinput
+      environment:
+        DJANGO_SUPERUSER_PASSWORD: "{{ vm_password }}"
+      failed_when: false
+
+
+    - name: Check if contrib gunicorn exists
+      ansible.builtin.stat:
+        path: /opt/netbox/contrib/gunicorn.py
+      register: gunicorn_contrib
+
+    - name: Copy gunicorn
+      ansible.builtin.copy:
+        src: '/opt/netbox/contrib/gunicorn.py'
+        dest: '/opt/netbox/gunicorn.py'
+        remote_src: true
+      when: gunicorn_contrib.stat.exists
+
+    - name: Check if contrib housekeeping exists
+      ansible.builtin.stat:
+        path: /opt/netbox/contrib/netbox-housekeeping.service
+      register: housekeeping_service
+
+    - name: Copy contrib
+      ansible.builtin.copy:
+        src: /opt/netbox/contrib/netbox-housekeeping.service
+        dest: /etc/systemd/system/netbox-housekeeping.service
+        remote_src: true
+      when: housekeeping_service.stat.exists
+
+    - name: Check if contrib netbox exists
+      ansible.builtin.stat:
+        path: /opt/netbox/contrib/netbox.service
+      register: netbox_service
+
+    - name: Copy contrib
+      ansible.builtin.copy:
+        src: /opt/netbox/contrib/netbox.service
+        dest: /etc/systemd/system/netbox.service
+        remote_src: true
+      when: netbox_service.stat.exists
+
+    - name: Check if contrib netbox-rq exists
+      ansible.builtin.stat:
+        path: /opt/netbox/contrib/netbox.service
+      register: netbox_rq_service
+
+    - name: Copy contrib
+      ansible.builtin.copy:
+        src: /opt/netbox/contrib/netbox-rq.service
+        dest: /etc/systemd/system/netbox-rq.service
+        remote_src: true
+      when: netbox_rq_service.stat.exists
+
+    - name: reload deamon
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+    - name: Make sure a service unit is running
+      ansible.builtin.systemd_service:
+        state: started
+        enabled: true
+        name: netbox
+      
+    - name: Make sure a service unit is running
+      ansible.builtin.systemd_service:
+        state: started
+        enabled: true
+        name:  netbox-rq
+
+    - name: Check if contrib netbox-rq exists
+      ansible.builtin.stat:
+        path: /opt/netbox/contrib/nginx.conf
+      register: nginx_conf
+
+    - name: Copy nginx files
+      ansible.builtin.copy:
+        src: /opt/netbox/contrib/nginx.conf
+        dest: /etc/nginx/sites-available/netbox
+        remote_src: true
+      when: nginx_conf.stat.exists
+
+    - name: site enabled
+      ansible.builtin.template:
+        src: templates/nginx.j2
+        dest: /etc/nginx/sites-available/netbox
+
+    - name: Remove file
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Create link
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/netbox
+        dest: /etc/nginx/sites-enabled/netbox
+        state: link
+      ignore_errors: true
+
+    - name: Make sure a service unit is running
+      ansible.builtin.systemd_service:
+        state: restarted
+        name:  nginx

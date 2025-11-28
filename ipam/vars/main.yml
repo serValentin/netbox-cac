@@ -1,0 +1,25 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for ipam
+ipam_scopes:
+  environment:
+    - production
+    - development
+    - testing
+  role:
+    - web
+    - api
+    - database
+    - cache
+  location:
+    - cloud
+    - onprem
+    - edge
+  platform:
+    - rhel
+    - ubuntu
+    - windows
+  workload:
+    - physical
+    - virtual
+    - container
