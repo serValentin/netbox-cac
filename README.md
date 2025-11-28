@@ -1,1 +1,2 @@
-# CaC-Netbox
+# Netbox configuration as code
+
