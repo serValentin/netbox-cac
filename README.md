@@ -9,6 +9,6 @@ postgres_user: <>
 
 postgres_password: <>
 
-ansible-playbook -i inventory.ini -e "@.netbox-vault.yml" netbox_installation.yml --ask-vault-pas
+ansible-playbook -i inventory.ini -e "@.netbox-vault.yml" netbox_installation.yml --ask-vault-pass
 
-ansible-playbook -i inventory.ini -e "@.netbox-vault.yml" netbox_config.yml --ask-vault-pas
+ansible-playbook -i inventory.ini -e "@.netbox-vault.yml" netbox_config.yml --ask-vault-pass
