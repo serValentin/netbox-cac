@@ -58,6 +58,7 @@
         version: "v4.2.0"
         force: yes
 
+
     - name: Ensure Redis is running
       ansible.builtin.service:
         name: redis-server
@@ -234,3 +235,15 @@
       ansible.builtin.systemd_service:
         state: restarted
         name:  nginx
+
+    - name: Clone NetBox
+      ansible.builtin.git:
+        repo: https://github.com/serValentin/firewall-objects.git
+        dest: /opt/netbox
+        version: "v4.2.0"
+        force: yes
+
+    - name: deploy firewall-objects
+      become: yes
+      ansible.builtin.command:
+        cmd: bash /opt/netbox/deploy.sh

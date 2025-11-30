@@ -4,7 +4,8 @@ ALLOWED_HOSTS = ['{{ ansible_host }}']
 
 SECRET_KEY = '{{ secret_key }}'
 
-DEBUG = False
+DEBUG = True
+DEVELOPER = True
 
 DATABASE = {
     'NAME': 'netbox',
@@ -43,4 +44,3 @@ AUTH_PASSWORD_VALIDATORS = [
 
 TIME_ZONE = 'Europe/Stockholm'
 LANGUAGE_CODE = 'en-us'
-
