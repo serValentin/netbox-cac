@@ -236,14 +236,14 @@
         state: restarted
         name:  nginx
 
-    - name: Clone NetBox
+    - name: Clone firewall-objects
+      become_user: "{{ ansible_user }}"
       ansible.builtin.git:
         repo: https://github.com/serValentin/firewall-objects.git
-        dest: /opt/netbox
-        version: "v4.2.0"
+        dest: "/home/{{ ansible_user }}/firewall-objects"
         force: yes
 
     - name: deploy firewall-objects
       become: yes
       ansible.builtin.command:
-        cmd: bash /opt/netbox/deploy.sh
+        cmd: "bash /home/{{ ansible_user }}/firewall-objects/deploy.sh"
